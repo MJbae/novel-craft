@@ -28,7 +28,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       .then((r) => r.json())
       .then((data: Project[]) => setProjects(data))
       .catch(() => {});
-  }, []);
+  }, [pathname]);
 
   const handleSelectProject = useCallback(
     (id: string | null) => {
