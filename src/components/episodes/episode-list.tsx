@@ -9,12 +9,14 @@ interface EpisodeListProps {
   episodes: Episode[];
   projectId: string;
   onCreateFirst?: () => void;
+  onDelete?: (id: string) => void;
 }
 
 export function EpisodeList({
   episodes,
   projectId,
   onCreateFirst,
+  onDelete,
 }: EpisodeListProps) {
   if (episodes.length === 0) {
     return (
@@ -45,6 +47,7 @@ export function EpisodeList({
           key={episode.id}
           episode={episode}
           projectId={projectId}
+          onDelete={onDelete}
         />
       ))}
     </div>

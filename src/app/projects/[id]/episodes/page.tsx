@@ -28,6 +28,17 @@ export default function EpisodesPage({
       .finally(() => setLoading(false));
   }, [projectId]);
 
+  const handleDeleteEpisode = async (id: string) => {
+    try {
+      const res = await fetch(`/api/episodes/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('삭제 실패');
+      setEpisodes((prev) => prev.filter((e) => e.id !== id));
+      toast.success('회차가 삭제되었습니다');
+    } catch {
+      toast.error('삭제에 실패했습니다');
+    }
+  };
+
   const handleCreate = async () => {
     if (creating) return;
     setCreating(true);
@@ -74,6 +85,7 @@ export default function EpisodesPage({
           episodes={episodes}
           projectId={projectId}
           onCreateFirst={handleCreate}
+          onDelete={handleDeleteEpisode}
         />
       )}
     </div>

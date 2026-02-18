@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Plus, BookOpen } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ProjectCard } from '@/components/projects/project-card';
 import { ProjectForm } from '@/components/projects/project-form';
@@ -22,6 +23,17 @@ export default function HomePage() {
 
   const handleCreated = (project: Project) => {
     setProjects((prev) => [project, ...prev]);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('삭제 실패');
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      toast.success('프로젝트가 삭제되었습니다');
+    } catch {
+      toast.error('삭제에 실패했습니다');
+    }
   };
 
   return (
@@ -60,7 +72,7 @@ export default function HomePage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((project) => (
-            <ProjectCard key={project.id} project={project} />
+            <ProjectCard key={project.id} project={project} onDelete={handleDelete} />
           ))}
         </div>
       )}

@@ -1,9 +1,21 @@
 'use client';
 
 import { useEffect, useState, useCallback, use } from 'react';
-import { Save, Sparkles, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Save, Sparkles, Users, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -44,6 +56,7 @@ interface ProjectSettingsPageProps {
 
 export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps) {
   const { id } = use(params);
+  const router = useRouter();
 
   const [project, setProject] = useState<Project | null>(null);
   const [characters, setCharacters] = useState<Character[]>([]);
@@ -130,6 +143,17 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
   const handleBootstrapCompleted = () => {
     fetchProject();
     fetchCharacters();
+  };
+
+  const handleDeleteProject = async () => {
+    try {
+      const res = await fetch(`/api/projects/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('삭제 실패');
+      toast.success('프로젝트가 삭제되었습니다');
+      router.push('/');
+    } catch {
+      toast.error('삭제에 실패했습니다');
+    }
   };
 
   if (loading) {
@@ -335,6 +359,41 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
                 ))}
               </div>
             )}
+          </CardContent>
+        </Card>
+        <Card className="border-destructive/50">
+          <CardHeader>
+            <CardTitle className="text-destructive">위험 영역</CardTitle>
+          </CardHeader>
+          <CardContent className="flex items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              프로젝트를 삭제하면 모든 회차, 캐릭터, 생성 데이터가 영구적으로 삭제됩니다.
+            </p>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="shrink-0">
+                  <Trash2 className="size-4" />
+                  프로젝트 삭제
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>프로젝트 삭제</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    &apos;{project?.name}&apos; 프로젝트를 삭제하시겠습니까? 모든 회차와 캐릭터 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>취소</AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    onClick={handleDeleteProject}
+                  >
+                    삭제
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </div>
