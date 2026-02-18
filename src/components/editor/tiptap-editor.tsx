@@ -1,9 +1,12 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useEditor, EditorContent } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import { Copy, Check } from 'lucide-react';
+import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface TiptapEditorProps {
@@ -17,6 +20,8 @@ export function TiptapEditor({
   onChange,
   editable = true,
 }: TiptapEditorProps) {
+  const [copied, setCopied] = useState(false);
+
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
@@ -33,10 +38,11 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm max-w-none dark:prose-invert',
-          'min-h-[500px] px-6 py-4 outline-none',
+          'prose prose-base max-w-none dark:prose-invert',
+          'min-h-[500px] px-6 py-6 outline-none',
           'focus:outline-none',
-          '[&_p]:my-2 [&_p]:leading-7',
+          'selection:bg-primary/20',
+          '[&_p]:my-4 [&_p]:leading-8',
           '[&_.is-editor-empty:first-child::before]:text-muted-foreground',
           '[&_.is-editor-empty:first-child::before]:float-left',
           '[&_.is-editor-empty:first-child::before]:pointer-events-none',
@@ -46,6 +52,15 @@ export function TiptapEditor({
       },
     },
   });
+
+  const handleCopy = async () => {
+    if (!editor) return;
+    const text = editor.getText();
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    toast.success('클립보드에 복사되었습니다');
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   useEffect(() => {
     if (!editor) return;
@@ -70,6 +85,23 @@ export function TiptapEditor({
 
   return (
     <div className="rounded-lg border bg-background">
+      {!editor.isEmpty && (
+        <div className="flex items-center justify-end border-b px-3 py-1.5">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopy}
+            className="h-7 gap-1.5 text-xs text-muted-foreground"
+          >
+            {copied ? (
+              <Check className="size-3.5" />
+            ) : (
+              <Copy className="size-3.5" />
+            )}
+            {copied ? '복사됨' : '복사'}
+          </Button>
+        </div>
+      )}
       <EditorContent editor={editor} />
     </div>
   );

@@ -115,7 +115,6 @@ export interface CodexResult {
 export interface CodexOptions {
   model?: string;
   timeout?: number;
-  json?: boolean;
 }
 
 export interface ContextBudget {

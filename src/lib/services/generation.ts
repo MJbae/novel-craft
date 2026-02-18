@@ -7,14 +7,24 @@ import { BootstrapResultSchema, OutlineSchema, EpisodeEventSchema } from '@/lib/
 import type { GenerationJob, Character, Project } from '@/types';
 import { z } from 'zod';
 
+function textToHtml(text: string): string {
+  if (text.startsWith('<')) return text;
+  return text
+    .split(/\n{2,}/)
+    .map((para) => para.trim())
+    .filter(Boolean)
+    .map((para) => `<p>${para.replace(/\n/g, '<br>')}</p>`)
+    .join('\n');
+}
+
 const TIMEOUTS: Record<string, number> = {
-  bootstrap: 120_000,
-  outline: 60_000,
-  episode_pass1: 300_000,
-  episode_pass2: 180_000,
-  revise: 180_000,
-  summary: 60_000,
-  event_extract: 60_000,
+  bootstrap: 180_000,
+  outline: 180_000,
+  episode_pass1: 600_000,
+  episode_pass2: 300_000,
+  revise: 300_000,
+  summary: 120_000,
+  event_extract: 120_000,
 };
 
 function getProject(projectId: string): Project & { settings: Record<string, string> } {
@@ -55,7 +65,6 @@ async function handleBootstrap(job: GenerationJob): Promise<string> {
 
   const result = await codexExecWithRetry(prompt, {
     timeout: TIMEOUTS.bootstrap,
-    json: true,
   });
 
   jobQueue.updateStatus(job.id, 'running', { progress: 70 });
@@ -116,7 +125,6 @@ async function handleOutline(job: GenerationJob): Promise<string> {
 
   const result = await codexExecWithRetry(prompt, {
     timeout: TIMEOUTS.outline,
-    json: true,
   });
 
   const parsed = parseJsonResponse<z.infer<typeof OutlineSchema>>(result.content);
@@ -222,6 +230,7 @@ async function handleEpisodePass1(job: GenerationJob): Promise<string> {
   }
 
   // Step 6: Save episode to DB
+  const htmlContent = textToHtml(finalContent);
   const episode = db.prepare(
     'SELECT id FROM episodes WHERE project_id = ? AND episode_number = ?',
   ).get(job.project_id, input.episode_number) as { id: string } | undefined;
@@ -235,7 +244,7 @@ async function handleEpisodePass1(job: GenerationJob): Promise<string> {
       VALUES (?, ?, ?, 'generated', ?, ?, ?, ?, ?, ?, ?)
     `).run(
       episodeId, job.project_id, input.episode_number,
-      finalContent, finalContent.replace(/\s/g, '').length,
+      htmlContent, htmlContent.replace(/<[^>]*>/g, '').replace(/\s/g, '').length,
       JSON.stringify(finalValidation.metrics), prompt,
       input.outline ? JSON.stringify(input.outline) : null,
       now, now,
@@ -245,7 +254,7 @@ async function handleEpisodePass1(job: GenerationJob): Promise<string> {
       UPDATE episodes SET status = 'generated', previous_content = content, content = ?, word_count = ?, style_metrics = ?, generation_prompt = ?, outline = ?, updated_at = ?
       WHERE id = ?
     `).run(
-      finalContent, finalContent.replace(/\s/g, '').length,
+      htmlContent, htmlContent.replace(/<[^>]*>/g, '').replace(/\s/g, '').length,
       JSON.stringify(finalValidation.metrics), prompt,
       input.outline ? JSON.stringify(input.outline) : null,
       now, episodeId,
@@ -267,7 +276,6 @@ async function handleEpisodePass1(job: GenerationJob): Promise<string> {
     });
 
     const eventsResult = await codexExecWithRetry(eventsPrompt, {
-      json: true,
       timeout: TIMEOUTS.event_extract,
     });
 
@@ -355,15 +363,16 @@ async function handleRevise(job: GenerationJob): Promise<string> {
   jobQueue.updateStatus(job.id, 'running', { step: 'pass1_generating', progress: 20 });
 
   const result = await codexExecWithRetry(prompt, { timeout: TIMEOUTS.revise });
-  const content = result.content;
+  const htmlContent = textToHtml(result.content);
+  const wordCount = htmlContent.replace(/<[^>]*>/g, '').replace(/\s/g, '').length;
   const now = new Date().toISOString();
 
   db.prepare(`
     UPDATE episodes SET previous_content = content, content = ?, word_count = ?, status = 'edited', updated_at = ?
     WHERE id = ?
-  `).run(content, content.replace(/\s/g, '').length, now, input.episode_id);
+  `).run(htmlContent, wordCount, now, input.episode_id);
 
-  return JSON.stringify({ episode_id: input.episode_id, content, word_count: content.replace(/\s/g, '').length });
+  return JSON.stringify({ episode_id: input.episode_id, content: htmlContent, word_count: wordCount });
 }
 
 async function handleSummary(job: GenerationJob): Promise<string> {

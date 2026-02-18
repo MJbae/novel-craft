@@ -11,6 +11,7 @@ export async function POST(request: NextRequest) {
 
     const job = jobQueue.create({
       projectId: data.project_id,
+      episodeId: data.episode_id,
       jobType: 'outline',
       input: {
         project_id: data.project_id,

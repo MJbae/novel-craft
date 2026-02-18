@@ -1,12 +1,18 @@
 import { NextResponse } from 'next/server';
 import { ZodError, type ZodSchema } from 'zod';
 import { initDb } from '@/lib/db/database';
+import { registerAllHandlers } from '@/lib/services/generation';
+import { worker } from '@/lib/services/worker';
+import { jobQueue } from '@/lib/services/job-queue';
 
 let dbInitialized = false;
 
 export function ensureDb(): void {
   if (!dbInitialized) {
     initDb();
+    jobQueue.cleanupStaleJobs();
+    registerAllHandlers();
+    worker.start();
     dbInitialized = true;
   }
 }

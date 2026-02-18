@@ -5,7 +5,6 @@ import Link from 'next/link';
 import {
   ArrowLeft,
   FileText,
-  Settings,
   Pencil,
   Check,
 } from 'lucide-react';
@@ -14,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { ScrollArea } from '@/components/ui/scroll-area';
+
 import { Textarea } from '@/components/ui/textarea';
 import {
   Tabs,
@@ -256,7 +255,7 @@ export default function EpisodeEditorPage({
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1">
+          <div className="min-h-0 flex-1 overflow-y-auto">
             <div className="mx-auto max-w-4xl px-3 py-4 sm:px-6 sm:py-6">
               <TabsContent value="outline">
                 <OutlinePanel
@@ -285,7 +284,7 @@ export default function EpisodeEditorPage({
                 <SettingsTab episode={episode} />
               </TabsContent>
             </div>
-          </ScrollArea>
+          </div>
         </Tabs>
       </div>
 

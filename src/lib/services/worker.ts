@@ -59,6 +59,7 @@ export const worker = {
   },
 
   start(): void {
+    isProcessing = false;
     setInterval(() => this.processNext(), 2000);
     process.on('unhandledRejection', () => {
       isProcessing = false;

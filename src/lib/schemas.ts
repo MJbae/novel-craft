@@ -162,6 +162,7 @@ export const GenerateBootstrapSchema = z.object({
 
 export const GenerateOutlineSchema = z.object({
   project_id: z.string().min(1),
+  episode_id: z.string().min(1).optional(),
   episode_number: z.number().int().min(1),
   additional_instructions: z.string().optional(),
 });

@@ -2,6 +2,7 @@ import { spawn } from 'child_process';
 import type { CodexOptions, CodexResult } from '@/types';
 
 const CODEX_PATH = process.env.CODEX_PATH || 'codex';
+const DEFAULT_MODEL = process.env.CODEX_MODEL || 'gpt-5.2';
 
 const ANSI_REGEX = /\x1b\[[0-9;]*m/g;
 const DEBUG_LINE_REGEX = /^(debug|warn|info):.*$/gm;
@@ -34,14 +35,12 @@ export function codexExec(
   options: CodexOptions = {},
 ): Promise<CodexResult> {
   const {
-    model = 'gpt-5.2',
+    model = DEFAULT_MODEL,
     timeout = 180_000,
-    json = false,
   } = options;
 
   return new Promise((resolve, reject) => {
-    const args = ['exec', '-m', model, '--stdin'];
-    if (json) args.push('--json');
+    const args = ['exec', '-m', model, '--skip-git-repo-check', '--ephemeral'];
 
     const child = spawn(CODEX_PATH, args, {
       env: { ...process.env },

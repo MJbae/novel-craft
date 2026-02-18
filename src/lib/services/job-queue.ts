@@ -106,6 +106,15 @@ export const jobQueue = {
     ).run(now, id);
   },
 
+  cleanupStaleJobs(): number {
+    const db = getDb();
+    const now = new Date().toISOString();
+    const result = db.prepare(
+      "UPDATE generation_jobs SET status = 'failed', error = 'Server restarted while job was running', completed_at = ? WHERE status = 'running'",
+    ).run(now);
+    return result.changes;
+  },
+
   getRunningCount(): number {
     const db = getDb();
     const row = db.prepare(

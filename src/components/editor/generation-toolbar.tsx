@@ -66,6 +66,7 @@ export function GenerationToolbar({
   const handleOutline = () =>
     generate('/api/generate/outline', {
       project_id: projectId,
+      episode_id: episodeId,
       episode_number: episodeNumber,
     }, '아웃라인 생성');
 
