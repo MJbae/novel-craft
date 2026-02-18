@@ -14,27 +14,33 @@ import {
 interface ExportButtonProps {
   projectId: string;
   projectName: string;
+  exportType?: 'episodes' | 'settings';
 }
 
-export function ExportButton({ projectId, projectName }: ExportButtonProps) {
+export function ExportButton({
+  projectId,
+  projectName,
+  exportType = 'episodes',
+}: ExportButtonProps) {
   const [exporting, setExporting] = useState(false);
 
   const handleExport = async (format: 'txt' | 'md') => {
     setExporting(true);
     try {
       const res = await fetch(
-        `/api/projects/${projectId}/export?format=${format}`,
+        `/api/projects/${projectId}/export?format=${format}&type=${exportType}`,
       );
 
       if (!res.ok) throw new Error('내보내기 실패');
 
       const blob = await res.blob();
+      const suffix = exportType === 'settings' ? '_설정' : '';
       const ext = format === 'md' ? 'md' : 'txt';
       const url = URL.createObjectURL(blob);
 
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${projectName}.${ext}`;
+      a.download = `${projectName}${suffix}.${ext}`;
       document.body.appendChild(a);
       a.click();
 
@@ -49,6 +55,8 @@ export function ExportButton({ projectId, projectName }: ExportButtonProps) {
     }
   };
 
+  const label = exportType === 'settings' ? '설정 내보내기' : '원고 내보내기';
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -58,7 +66,7 @@ export function ExportButton({ projectId, projectName }: ExportButtonProps) {
           ) : (
             <Download className="size-4" />
           )}
-          내보내기
+          {label}
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

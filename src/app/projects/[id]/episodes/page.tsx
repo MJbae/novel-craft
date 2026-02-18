@@ -6,7 +6,8 @@ import { Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { EpisodeList } from '@/components/episodes/episode-list';
-import type { Episode } from '@/types';
+import { ExportButton } from '@/components/projects/export-button';
+import type { Episode, Project } from '@/types';
 
 export default function EpisodesPage({
   params,
@@ -17,14 +18,20 @@ export default function EpisodesPage({
   const router = useRouter();
 
   const [episodes, setEpisodes] = useState<Episode[]>([]);
+  const [projectName, setProjectName] = useState('');
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
-    fetch(`/api/projects/${projectId}/episodes`)
-      .then((r) => r.json())
-      .then((data: Episode[]) => setEpisodes(data))
-      .catch(() => toast.error('회차 목록을 불러오지 못했습니다'))
+    Promise.all([
+      fetch(`/api/projects/${projectId}/episodes`)
+        .then((r) => r.json())
+        .then((data: Episode[]) => setEpisodes(data)),
+      fetch(`/api/projects/${projectId}`)
+        .then((r) => r.json())
+        .then((data: Project) => setProjectName(data.name)),
+    ])
+      .catch(() => toast.error('데이터를 불러오지 못했습니다'))
       .finally(() => setLoading(false));
   }, [projectId]);
 
@@ -65,10 +72,17 @@ export default function EpisodesPage({
     <div className="mx-auto max-w-5xl px-6 py-8">
       <div className="mb-8 flex items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">회차 목록</h1>
-        <Button onClick={handleCreate} disabled={creating}>
-          <Plus className="size-4" />
-          {creating ? '생성 중…' : '새 회차'}
-        </Button>
+        <div className="flex gap-2">
+          <ExportButton
+            projectId={projectId}
+            projectName={projectName}
+            exportType="episodes"
+          />
+          <Button onClick={handleCreate} disabled={creating}>
+            <Plus className="size-4" />
+            {creating ? '생성 중…' : '새 회차'}
+          </Button>
+        </div>
       </div>
 
       {loading ? (

@@ -196,7 +196,7 @@ export default function ProjectSettingsPage({ params }: ProjectSettingsPageProps
       <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-2xl font-bold tracking-tight">프로젝트 설정</h1>
         <div className="flex flex-wrap gap-2">
-          <ExportButton projectId={id} projectName={name || project?.name || ''} />
+          <ExportButton projectId={id} projectName={name || project?.name || ''} exportType="settings" />
           <Button variant="outline" onClick={() => setBootstrapOpen(true)}>
             <Sparkles className="size-4" />
             부트스트랩 실행
