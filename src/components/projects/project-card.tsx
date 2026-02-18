@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { CalendarDays, Trash2 } from 'lucide-react';
 import {
@@ -19,7 +20,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import type { Project } from '@/types';
 
@@ -29,6 +29,7 @@ interface ProjectCardProps {
 }
 
 export function ProjectCard({ project, onDelete }: ProjectCardProps) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const createdDate = new Date(project.created_at).toLocaleDateString('ko-KR', {
     year: 'numeric',
     month: 'short',
@@ -44,43 +45,44 @@ export function ProjectCard({ project, onDelete }: ProjectCardProps) {
               {project.name}
             </CardTitle>
             {onDelete && (
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="size-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                    }}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>프로젝트 삭제</AlertDialogTitle>
-                    <AlertDialogDescription>
-                      &apos;{project.name}&apos; 프로젝트를 삭제하시겠습니까? 모든 회차와 캐릭터 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
-                      취소
-                    </AlertDialogCancel>
-                    <AlertDialogAction
-                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        onDelete(project.id);
-                      }}
-                    >
-                      삭제
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setDeleteOpen(true);
+                  }}
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
+                <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>프로젝트 삭제</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        &apos;{project.name}&apos; 프로젝트를 삭제하시겠습니까? 모든 회차와 캐릭터 데이터가 삭제됩니다. 이 작업은 되돌릴 수 없습니다.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                        취소
+                      </AlertDialogCancel>
+                      <AlertDialogAction
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onDelete(project.id);
+                        }}
+                      >
+                        삭제
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </>
             )}
           </div>
         </CardHeader>

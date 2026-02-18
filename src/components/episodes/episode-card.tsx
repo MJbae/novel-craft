@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   FileText,
@@ -26,7 +27,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { cn } from '@/lib/utils';
 import type { Episode, EpisodeStatus } from '@/types';
@@ -75,6 +75,7 @@ function StyleMetricsIndicator({ passed }: { passed: boolean }) {
 }
 
 export function EpisodeCard({ episode, projectId, onDelete }: EpisodeCardProps) {
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const status = STATUS_CONFIG[episode.status];
 
   const createdDate = new Date(episode.created_at).toLocaleDateString('ko-KR', {
@@ -108,43 +109,44 @@ export function EpisodeCard({ episode, projectId, onDelete }: EpisodeCardProps) 
                 {status.label}
               </Badge>
               {onDelete && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                      }}
-                    >
-                      <Trash2 className="size-3.5" />
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent onClick={(e) => e.stopPropagation()}>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>회차 삭제</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        {episode.episode_number}화를 삭제하시겠습니까? 원고, 아웃라인 등 모든 데이터가 삭제됩니다.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
-                        취소
-                      </AlertDialogCancel>
-                      <AlertDialogAction
-                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          onDelete(episode.id);
-                        }}
-                      >
-                        삭제
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+                <>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="size-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setDeleteOpen(true);
+                    }}
+                  >
+                    <Trash2 className="size-3.5" />
+                  </Button>
+                  <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+                    <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>회차 삭제</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          {episode.episode_number}화를 삭제하시겠습니까? 원고, 아웃라인 등 모든 데이터가 삭제됩니다.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={(e) => e.stopPropagation()}>
+                          취소
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                          className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            onDelete(episode.id);
+                          }}
+                        >
+                          삭제
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
               )}
             </div>
           </div>
