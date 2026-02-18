@@ -72,6 +72,7 @@ export const OutlineSceneSchema = z.object({
 });
 
 export const OutlineSchema = z.object({
+  title: z.string().min(1).optional(),
   scenes: z.array(OutlineSceneSchema).min(3).max(5),
   ending_hook: z.string().min(1),
   estimated_word_count: z.number().int().default(8000),
@@ -148,12 +149,12 @@ export const CreateEpisodeSchema = z.object({
 });
 
 export const UpdateEpisodeSchema = z.object({
-  title: z.string().optional(),
+  title: z.string().nullable().optional(),
   status: EpisodeStatusSchema.optional(),
-  outline: OutlineSchema.optional(),
-  content: z.string().optional(),
-  summary: z.string().optional(),
-  user_notes: z.string().optional(),
+  outline: OutlineSchema.nullable().optional(),
+  content: z.string().nullable().optional(),
+  summary: z.string().nullable().optional(),
+  user_notes: z.string().nullable().optional(),
 });
 
 export const GenerateBootstrapSchema = z.object({

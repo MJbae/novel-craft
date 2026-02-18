@@ -132,9 +132,15 @@ async function handleOutline(job: GenerationJob): Promise<string> {
 
   if (job.episode_id) {
     const now = new Date().toISOString();
-    db.prepare(
-      "UPDATE episodes SET outline = ?, status = 'outline', updated_at = ? WHERE id = ?",
-    ).run(JSON.stringify(validated), now, job.episode_id);
+    if (validated.title) {
+      db.prepare(
+        "UPDATE episodes SET outline = ?, title = ?, status = 'outline', updated_at = ? WHERE id = ?",
+      ).run(JSON.stringify(validated), validated.title, now, job.episode_id);
+    } else {
+      db.prepare(
+        "UPDATE episodes SET outline = ?, status = 'outline', updated_at = ? WHERE id = ?",
+      ).run(JSON.stringify(validated), now, job.episode_id);
+    }
   }
 
   return JSON.stringify(validated);
@@ -232,11 +238,12 @@ async function handleEpisodePass1(job: GenerationJob): Promise<string> {
   // Step 6: Save episode to DB
   const htmlContent = textToHtml(finalContent);
   const episode = db.prepare(
-    'SELECT id FROM episodes WHERE project_id = ? AND episode_number = ?',
-  ).get(job.project_id, input.episode_number) as { id: string } | undefined;
+    'SELECT id, outline FROM episodes WHERE project_id = ? AND episode_number = ?',
+  ).get(job.project_id, input.episode_number) as { id: string; outline: string | null } | undefined;
 
   const episodeId = episode?.id || uuidv4();
   const now = new Date().toISOString();
+  const outlineToSave = input.outline ? JSON.stringify(input.outline) : episode?.outline ?? null;
 
   if (!episode) {
     db.prepare(`
@@ -246,17 +253,16 @@ async function handleEpisodePass1(job: GenerationJob): Promise<string> {
       episodeId, job.project_id, input.episode_number,
       htmlContent, htmlContent.replace(/<[^>]*>/g, '').replace(/\s/g, '').length,
       JSON.stringify(finalValidation.metrics), prompt,
-      input.outline ? JSON.stringify(input.outline) : null,
+      outlineToSave,
       now, now,
     );
   } else {
     db.prepare(`
-      UPDATE episodes SET status = 'generated', previous_content = content, content = ?, word_count = ?, style_metrics = ?, generation_prompt = ?, outline = ?, updated_at = ?
+      UPDATE episodes SET status = 'generated', previous_content = content, content = ?, word_count = ?, style_metrics = ?, generation_prompt = ?, updated_at = ?
       WHERE id = ?
     `).run(
       htmlContent, htmlContent.replace(/<[^>]*>/g, '').replace(/\s/g, '').length,
       JSON.stringify(finalValidation.metrics), prompt,
-      input.outline ? JSON.stringify(input.outline) : null,
       now, episodeId,
     );
   }
