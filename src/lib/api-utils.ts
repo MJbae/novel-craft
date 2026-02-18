@@ -5,15 +5,15 @@ import { registerAllHandlers } from '@/lib/services/generation';
 import { worker } from '@/lib/services/worker';
 import { jobQueue } from '@/lib/services/job-queue';
 
-let dbInitialized = false;
+const globalForDb = globalThis as unknown as { __novelCraftDbInit?: boolean };
 
 export function ensureDb(): void {
-  if (!dbInitialized) {
+  if (!globalForDb.__novelCraftDbInit) {
     initDb();
     jobQueue.cleanupStaleJobs();
     registerAllHandlers();
     worker.start();
-    dbInitialized = true;
+    globalForDb.__novelCraftDbInit = true;
   }
 }
 

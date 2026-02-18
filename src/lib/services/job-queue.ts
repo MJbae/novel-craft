@@ -109,9 +109,10 @@ export const jobQueue = {
   cleanupStaleJobs(): number {
     const db = getDb();
     const now = new Date().toISOString();
+    const staleThreshold = new Date(Date.now() - 10 * 60 * 1000).toISOString();
     const result = db.prepare(
-      "UPDATE generation_jobs SET status = 'failed', error = 'Server restarted while job was running', completed_at = ? WHERE status = 'running'",
-    ).run(now);
+      "UPDATE generation_jobs SET status = 'failed', error = 'Job timed out (running over 10 minutes)', completed_at = ? WHERE status = 'running' AND started_at < ?",
+    ).run(now, staleThreshold);
     return result.changes;
   },
 
