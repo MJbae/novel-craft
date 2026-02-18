@@ -4,7 +4,6 @@ import { useState } from 'react';
 import {
   BookOpen,
   FileText,
-  ScrollText,
   Save,
   Loader2,
 } from 'lucide-react';
@@ -76,12 +75,6 @@ export function GenerationToolbar({
       episode_number: episodeNumber,
     }, '원고 생성');
 
-  const handleSummary = () =>
-    generate('/api/generate/summary', {
-      project_id: projectId,
-      episode_id: episodeId,
-    }, '요약 생성');
-
   const busy = polling || generating !== null;
 
   return (
@@ -112,20 +105,6 @@ export function GenerationToolbar({
           <FileText className="size-4" />
         )}
         원고 생성
-      </Button>
-
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={handleSummary}
-        disabled={busy || !hasContent}
-      >
-        {generating === '요약 생성' ? (
-          <Loader2 className="size-4 animate-spin" />
-        ) : (
-          <ScrollText className="size-4" />
-        )}
-        요약 생성
       </Button>
 
       <div className="ml-auto">

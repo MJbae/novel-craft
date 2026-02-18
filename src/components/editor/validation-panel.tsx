@@ -1,11 +1,18 @@
 'use client';
 
-import { BarChart3 } from 'lucide-react';
+import { useState } from 'react';
+import { BarChart3, Sparkles, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
+import { useJobStore } from '@/stores/job-store';
 import type { StyleMetrics } from '@/types';
 
 interface ValidationPanelProps {
   metrics: StyleMetrics | null;
+  projectId: string;
+  episodeId: string;
+  hasContent: boolean;
 }
 
 interface MetricRow {
@@ -77,7 +84,47 @@ const STATUS_ICON: Record<MetricRow['status'], string> = {
   fail: '\u274c',
 };
 
-export function ValidationPanel({ metrics }: ValidationPanelProps) {
+function buildImprovementInstruction(rows: MetricRow[]): string {
+  const issues = rows.filter((r) => r.status !== 'pass');
+  if (issues.length === 0) return '';
+
+  const lines = issues.map((r) => {
+    const prefix = r.status === 'fail' ? '[필수]' : '[권장]';
+    return `${prefix} ${r.label}: 현재 ${r.actual}, 목표 ${r.expected}`;
+  });
+
+  return `다음 검증 결과를 바탕으로 원고를 개선해주세요:\n${lines.join('\n')}`;
+}
+
+export function ValidationPanel({ metrics, projectId, episodeId, hasContent }: ValidationPanelProps) {
+  const { polling, startPolling } = useJobStore();
+  const [improving, setImproving] = useState(false);
+
+  const handleImprove = async (instruction: string) => {
+    setImproving(true);
+    try {
+      const res = await fetch('/api/generate/revise', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          project_id: projectId,
+          episode_id: episodeId,
+          revision_instruction: instruction,
+        }),
+      });
+
+      if (!res.ok) throw new Error('요청 실패');
+
+      const data = await res.json();
+      startPolling(data.job_id);
+      toast.success('원고 개선 작업이 시작되었습니다');
+    } catch {
+      toast.error('원고 개선 요청에 실패했습니다');
+    } finally {
+      setImproving(false);
+    }
+  };
+
   if (!metrics) {
     return (
       <div className="flex flex-col items-center justify-center gap-3 py-16 text-center">
@@ -91,6 +138,9 @@ export function ValidationPanel({ metrics }: ValidationPanelProps) {
 
   const rows = evaluateMetrics(metrics);
   const passCount = rows.filter((r) => r.status === 'pass').length;
+  const hasIssues = passCount < rows.length;
+  const improvementInstruction = buildImprovementInstruction(rows);
+  const busy = polling || improving;
 
   return (
     <div className="flex flex-col gap-4">
@@ -143,6 +193,23 @@ export function ValidationPanel({ metrics }: ValidationPanelProps) {
           </div>
         ))}
       </div>
+
+      {hasContent && (
+        <Button
+          onClick={() => handleImprove(improvementInstruction)}
+          disabled={busy || !hasIssues}
+          className="w-full"
+        >
+          {improving ? (
+            <Loader2 className="size-4 animate-spin" />
+          ) : (
+            <Sparkles className="size-4" />
+          )}
+          {hasIssues
+            ? `검증 기준으로 원고 개선 (${rows.length - passCount}건)`
+            : '모든 검증 통과'}
+        </Button>
+      )}
     </div>
   );
 }

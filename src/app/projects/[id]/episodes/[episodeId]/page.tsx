@@ -273,7 +273,12 @@ export default function EpisodeEditorPage({
               </TabsContent>
 
               <TabsContent value="validation">
-                <ValidationPanel metrics={episode.style_metrics} />
+                <ValidationPanel
+                  metrics={episode.style_metrics}
+                  projectId={projectId}
+                  episodeId={episodeId}
+                  hasContent={!!episode.content}
+                />
               </TabsContent>
 
               <TabsContent value="events">

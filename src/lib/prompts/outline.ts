@@ -27,6 +27,7 @@ ${params.additional_instructions}
 
 ## 출력 형식 (JSON)
 {
+  "title": "이 화의 제목 (흥미를 끌 수 있는 짧은 문장, 15자 이내)",
   "scenes": [
     {
       "scene_number": 1,
